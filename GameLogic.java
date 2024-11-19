@@ -26,6 +26,7 @@ public class GameLogic implements PlayableLogic{
     SimpleDisc disc43;
 
 
+
     public void PlaceDisc(Disc disctype, int row, int col){
         switch (disctype.getType()) {
             case "SimpleDisc":
@@ -82,8 +83,99 @@ public class GameLogic implements PlayableLogic{
 
     @Override
     public int countFlips(Position a) {
-        return 0;
+        int Flips = 0;
+
+        // Check for row down.
+        for (int row = a.row() + 1; row < 8; row++) {
+            if (GameBoard[row][a.col()] != null && GameBoard[row][a.col()].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[row][a.col()] != null && GameBoard[row][a.col()].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for row up.
+        for (int row = a.row() - 1; row >= 0; row--) {
+            if (GameBoard[row][a.col()] != null && GameBoard[row][a.col()].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[row][a.col()] != null && GameBoard[row][a.col()].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for column right.
+        for (int col = a.col() + 1; col < 8; col++) {
+            if (GameBoard[a.row()][col] != null && GameBoard[a.row()][col].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[a.row()][col] != null && GameBoard[a.row()][col].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for column left.
+        for (int col = a.col() - 1; col >= 0; col--) {
+            if (GameBoard[a.row()][col] != null && GameBoard[a.row()][col].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[a.row()][col] != null && GameBoard[a.row()][col].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for upper left diagonal.
+        for (int i = a.row() - 1, j = a.col() - 1; i >= 0 && j >= 0; i--, j--) {
+            if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for upper right diagonal.
+        for (int i = a.row() - 1, j = a.col() + 1; i >= 0 && j < 8; i--, j++) {
+            if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for bottom left diagonal.
+        for (int i = a.row() + 1, j = a.col() - 1; i < 8 && j >= 0; i++, j--) {
+            if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        // Check for bottom right diagonal.
+        for (int i = a.row() + 1, j = a.col() + 1; i < 8 && j < 8; i++, j++) {
+            if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == SecondPlayer) {
+                Flips++;
+            } else if (GameBoard[i][j] != null && GameBoard[i][j].getOwner() == FirstPlayer) {
+                break;
+            } else {
+                break;
+            }
+        }
+
+        return Flips;
     }
+
 
     @Override
     public Player getFirstPlayer() {
@@ -111,6 +203,17 @@ public class GameLogic implements PlayableLogic{
 
     @Override
     public boolean isGameFinished() {
+        int PlacedDiscs = 0;
+        for (int row = 0 ; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if (GameBoard[row][col] != null) {
+                    PlacedDiscs++;
+                }
+            }
+        }
+        if (PlacedDiscs == 64){
+            return true;
+        }
         return false;
     }
 
