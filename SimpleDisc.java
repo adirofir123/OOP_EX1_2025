@@ -1,23 +1,24 @@
 public class SimpleDisc implements Disc{
 
-    public Player Owner ;
+    private Player owner;
 
-    public SimpleDisc(Player currentPlayer) {
-        this.Owner = currentPlayer;
+    public SimpleDisc(Player owner) {
+        this.owner = owner;
     }
 
     @Override
     public Player getOwner() {
-        return Owner;
+        return owner;
     }
 
     @Override
     public void setOwner(Player player) {
-        this.Owner = player;
+        this.owner = player;
     }
 
     @Override
     public String getType() {
         return "SimpleDisc";
     }
+
 }

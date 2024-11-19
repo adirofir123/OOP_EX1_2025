@@ -14,4 +14,3 @@ private int x,y;
         return y;
     }
 }
-

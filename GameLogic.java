@@ -1,14 +1,18 @@
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class GameLogic implements PlayableLogic{
 
-    public Player player1 = new Player(true) {
+
+
+    public Player FirstPlayer = new Player(true) {
         @Override
         boolean isHuman() {
             return true;
         }
     };
-    public Player player2 = new Player(true) {
+    public Player SecondPlayer = new Player(true) {
         @Override
         boolean isHuman() {
             return true;
@@ -20,48 +24,60 @@ public class GameLogic implements PlayableLogic{
     SimpleDisc disc33;
     SimpleDisc disc34;
     SimpleDisc disc43;
-    public GameLogic() {
-        disc44 = new SimpleDisc(player1);
-        disc33 = new SimpleDisc(player1);
-        GameBoard[4][4] = disc44;
-        GameBoard[3][3] = disc33;
 
-        disc34 = new SimpleDisc(player2);
-        disc43 = new SimpleDisc(player2);
-        GameBoard[3][4] = disc34;
-        GameBoard[3][4] = disc43;
-    }
 
     public void PlaceDisc(Disc disctype, int row, int col){
-        switch (disctype) {
-            case SimpleDisc:
+        switch (disctype.getType()) {
+            case "SimpleDisc":
                 GameBoard[row][col] = disctype;
-            case UnflippableDisc:
+                break;
+            case "UnflippedDisc":
                 GameBoard[row][col] = disctype;
-            case BombDisc:
+                break;
+            case "BombDisc":
                 GameBoard[row][col] = disctype;
+                break;
 
         }
     }
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
-        return false;
+        if (GameBoard[a.row()][a.col()] == disc) {
+            return false;
+        }
+        else {
+            return true;
+        }
     }
+
 
     @Override
     public Disc getDiscAtPosition(Position position) {
-        return null;
+        Disc disc = GameBoard[position.row()][position.col()];
+        if (GameBoard[position.row()][position.col()] == null) {
+            return null;
+        }
+        return disc;
     }
 
     @Override
     public int getBoardSize() {
-        return 0;
+        return 8;
     }
 
     @Override
     public List<Position> ValidMoves() {
-        return List.of();
+        List<Position> validMoves = new ArrayList<>();
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Position pos = new Position(row, col);
+                if (GameBoard[row][col] == null) {
+                        validMoves.add(pos);
+                }
+            }
+        }
+        return validMoves;
     }
 
     @Override
@@ -71,21 +87,25 @@ public class GameLogic implements PlayableLogic{
 
     @Override
     public Player getFirstPlayer() {
-        return null;
+        return FirstPlayer;
     }
 
     @Override
     public Player getSecondPlayer() {
-        return null;
+        return SecondPlayer;
     }
 
     @Override
     public void setPlayers(Player player1, Player player2) {
-
+        player1.isHuman();
+        player2.isHuman();
     }
 
     @Override
     public boolean isFirstPlayerTurn() {
+        if (GameBoard[0][0] == null) {
+            return true;
+        }
         return false;
     }
 
@@ -96,11 +116,21 @@ public class GameLogic implements PlayableLogic{
 
     @Override
     public void reset() {
+        disc44 = new SimpleDisc(FirstPlayer);
+        disc33 = new SimpleDisc(FirstPlayer);
+        GameBoard[4][4] = disc44;
+        GameBoard[3][3] = disc33;
 
+        disc34 = new SimpleDisc(SecondPlayer);
+        disc43 = new SimpleDisc(SecondPlayer);
+        GameBoard[3][4] = disc34;
+        GameBoard[4][3] = disc43;
     }
 
     @Override
     public void undoLastMove() {
+        Stack<Position> stack = new Stack<>();
+        stack.pop();
 
     }
 
