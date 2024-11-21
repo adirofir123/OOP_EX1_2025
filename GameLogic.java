@@ -2,39 +2,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-public class GameLogic implements PlayableLogic{
+public class GameLogic implements PlayableLogic {
 
-    public Player CurrentPlayer = new Player(true) {
-        @Override
-        boolean isHuman() {
-            return true;
-        }
-    };
+    private Player CurrentPlayer;
+    private Player FirstPlayer;
+    private Player SecondPlayer;
+    private Disc[][] GameBoard = new Disc[8][8];
+    private List<Position> ValidMoves;
 
-    public Player FirstPlayer = new Player(true) {
-        @Override
-        boolean isHuman() {
-            return true;
-        }
-    };
-    public Player SecondPlayer = new Player(false) {
-        @Override
-        boolean isHuman() {
-            return true;
-        }
-    };
-
-    public Disc[][] GameBoard = new Disc[8][8];
     SimpleDisc disc44;
     SimpleDisc disc33;
     SimpleDisc disc34;
     SimpleDisc disc43;
 
 
-
     @Override
     public boolean locate_disc(Position a, Disc disc) {
-        return GameBoard[a.row()][a.col()] == null;
+        if (ValidMoves.contains(a)) {
+            GameBoard[a.row()][a.col()] = disc;
+        }
+        int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
+        System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
+        CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
+        return true;
     }
 
 
@@ -70,7 +60,7 @@ public class GameLogic implements PlayableLogic{
                 }
             }
         }
-
+        this.ValidMoves = validMoves;
         return validMoves;
     }
 
@@ -128,7 +118,6 @@ public class GameLogic implements PlayableLogic{
     }
 
 
-
     @Override
     public Player getFirstPlayer() {
         return FirstPlayer;
@@ -143,14 +132,14 @@ public class GameLogic implements PlayableLogic{
     public void setPlayers(Player player1, Player player2) {
         this.FirstPlayer = player1;
         this.SecondPlayer = player2;
+        CurrentPlayer = player1;
     }
 
 
-    private int turnCounter = 0;
 
     @Override
     public boolean isFirstPlayerTurn() {
-        return turnCounter % 2 == 0;  // Even turn, first player's turn
+        return CurrentPlayer == FirstPlayer;
     }
 
     public List<Position> ValidMovesForPlayer(Player player) {
@@ -220,8 +209,6 @@ public class GameLogic implements PlayableLogic{
         GameBoard[3][4] = disc34;  // Player 2's disc
         GameBoard[4][3] = disc43;  // Player 2's disc
 
-        // Reset the turn counter to start with Player 1
-        turnCounter = 0;
 
         // Reset CurrentPlayer to Player 1
         CurrentPlayer = FirstPlayer;
@@ -234,7 +221,6 @@ public class GameLogic implements PlayableLogic{
         stack.pop();
 
     }
-
 
 
 }

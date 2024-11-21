@@ -18,6 +18,6 @@ public class UnflippableDisc implements Disc{
 
     @Override
     public String getType() {
-        return "UnflippableDisc";
+        return "⭕";
     }
 }
