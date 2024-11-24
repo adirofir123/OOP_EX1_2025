@@ -18,9 +18,11 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
-        if (ValidMoves.contains(a)) {
-            GameBoard[a.row()][a.col()] = disc;
+        if (!ValidMoves.contains(a)) {
+            return false;
         }
+        GameBoard[a.row()][a.col()] = disc;
+
         int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
         System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
@@ -197,6 +199,12 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void reset() {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                GameBoard[row][col] = null;
+            }
+        }
+
         // Create discs for both players
         disc44 = new SimpleDisc(FirstPlayer);
         disc33 = new SimpleDisc(FirstPlayer);
