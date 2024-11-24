@@ -22,11 +22,64 @@ public class GameLogic implements PlayableLogic {
             return false;
         }
         GameBoard[a.row()][a.col()] = disc;
-
+        flipDiscs(a);
         int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
         System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
         return true;
+    }
+
+    public void flipDiscs(Position a) {
+        // Array of directions to check
+        int[][] directions = {
+                {-1, 0},  // Up
+                {1, 0},   // Down
+                {0, -1},  // Left
+                {0, 1},   // Right
+                {-1, -1}, // Top-left diagonal
+                {-1, 1},  // Top-right diagonal
+                {1, -1},  // Bottom-left diagonal
+                {1, 1}    // Bottom-right diagonal
+        };
+
+        // Loop through each direction
+        for (int[] direction : directions) {
+            int r = a.row();
+            int c = a.col();
+            List<Position> discsToFlip = new ArrayList<>();
+
+            // Check in the current direction
+            while (true) {
+                r += direction[0];
+                c += direction[1];
+
+                // If out of bounds, stop checking this direction
+                if (r < 0 || r >= 8 || c < 0 || c >= 8) {
+                    break;
+                }
+
+                // If the cell is empty, stop checking
+                if (GameBoard[r][c] == null) {
+                    break;
+                }
+
+                // If it's an opponent's disc, keep adding it to the flip list
+                if (GameBoard[r][c].getOwner() != CurrentPlayer) {
+                    discsToFlip.add(new Position(r, c));
+                }
+                // If it's the current player's disc, flip the opponent's discs in between
+                else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
+                    for (Position flipPos : discsToFlip) {
+                        GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
+                    }
+                    break; // Stop checking this direction after flipping
+                }
+                // If it's the current player's disc but no opponent discs in between, stop
+                else {
+                    break;
+                }
+            }
+        }
     }
 
 
@@ -68,7 +121,6 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public int countFlips(Position a) {
-        int flips = 0;
 
         // Array of directions to check
         int[][] directions = {
@@ -136,7 +188,6 @@ public class GameLogic implements PlayableLogic {
         this.SecondPlayer = player2;
         CurrentPlayer = player1;
     }
-
 
 
     @Override
