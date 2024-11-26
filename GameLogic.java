@@ -22,13 +22,20 @@ public class GameLogic implements PlayableLogic {
         if (!ValidMoves.contains(a)) {
             return false;
         }
-//        if (disc.getType() == "⭕" && CurrentPlayer.number_of_unflippedable > 0) {
-//            CurrentPlayer.reduce_unflippedable();
-//        }
-//        else{
-//            System.out.println("You dont have anymore unflipleable disc");
-//            return false;
-//        }
+        if(disc.getType().equals("⭕")){
+            if (CurrentPlayer.getNumber_of_unflippedable() == 0) {
+                System.out.println("too many unflippedable");
+                return false;
+            }
+            CurrentPlayer.reduce_unflippedable();
+        }
+        if(disc.getType().equals("💣")){
+            if (CurrentPlayer.getNumber_of_bombs() == 0) {
+                System.out.println("too many bomb");
+                return false;
+            }
+            CurrentPlayer.reduce_bomb();
+        }
         GameBoard[a.row()][a.col()] = disc;
         int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
         System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
@@ -132,6 +139,7 @@ public class GameLogic implements PlayableLogic {
         return validMoves;
     }
 
+
     @Override
     public int countFlips(Position a) {
 
@@ -149,9 +157,9 @@ public class GameLogic implements PlayableLogic {
 
         // Loop through each direction
         for (int[] direction : directions) {
+            int flipped = 0;
             int r = a.row();
             int c = a.col();
-            int flipped = 0;
             boolean validDirection = false;
 
             // Check in the current direction
