@@ -9,7 +9,6 @@ public class GameLogic implements PlayableLogic {
     private Player SecondPlayer;
     private Disc[][] GameBoard = new Disc[8][8];
     private List<Position> ValidMoves;
-    private Stack<Move> undoStack = new Stack<>();
     private Stack<Move> moveStack = new Stack<>();
 
     SimpleDisc disc44;
@@ -23,6 +22,13 @@ public class GameLogic implements PlayableLogic {
         if (!ValidMoves.contains(a)) {
             return false;
         }
+//        if (disc.getType() == "⭕" && CurrentPlayer.number_of_unflippedable > 0) {
+//            CurrentPlayer.reduce_unflippedable();
+//        }
+//        else{
+//            System.out.println("You dont have anymore unflipleable disc");
+//            return false;
+//        }
         GameBoard[a.row()][a.col()] = disc;
         int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
         System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
@@ -33,61 +39,62 @@ public class GameLogic implements PlayableLogic {
     }
 
     public List<Move.FlippedDisc> flipDiscs(Position a) {
-        List<Move.FlippedDisc> flippedDiscs = new ArrayList<>();
-        // Array of directions to check
-        int[][] directions = {
-                {-1, 0},  // Up
-                {1, 0},   // Down
-                {0, -1},  // Left
-                {0, 1},   // Right
-                {-1, -1}, // Top-left diagonal
-                {-1, 1},  // Top-right diagonal
-                {1, -1},  // Bottom-left diagonal
-                {1, 1}    // Bottom-right diagonal
-        };
+                  List<Move.FlippedDisc> flippedDiscs = new ArrayList<>();
+            // Array of directions to check
+            int[][] directions = {
+                    {-1, 0},  // Up
+                    {1, 0},   // Down
+                    {0, -1},  // Left
+                    {0, 1},   // Right
+                    {-1, -1}, // Top-left diagonal
+                    {-1, 1},  // Top-right diagonal
+                    {1, -1},  // Bottom-left diagonal
+                    {1, 1}    // Bottom-right diagonal
+            };
 
-        // Loop through each direction
-        for (int[] direction : directions) {
-            int r = a.row();
-            int c = a.col();
-            List<Position> discsToFlip = new ArrayList<>();
+            // Loop through each direction
+            for (int[] direction : directions) {
+                int r = a.row();
+                int c = a.col();
+                List<Position> discsToFlip = new ArrayList<>();
 
-            // Check in the current direction
-            while (true) {
-                r += direction[0];
-                c += direction[1];
+                // Check in the current direction
+                while (true) {
+                    r += direction[0];
+                    c += direction[1];
 
-                // If out of bounds, stop checking this direction
-                if (r < 0 || r >= 8 || c < 0 || c >= 8) {
-                    break;
-                }
-
-                // If the cell is empty, stop checking
-                if (GameBoard[r][c] == null) {
-                    break;
-                }
-
-                // If it's an opponent's disc, keep adding it to the flip list
-                if (GameBoard[r][c].getOwner() != CurrentPlayer) {
-                    discsToFlip.add(new Position(r, c));
-                }
-                // If it's the current player's disc, flip the opponent's discs in between
-                else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
-                    for (Position flipPos : discsToFlip) {
-                        flippedDiscs.add(new Move.FlippedDisc(flipPos,GameBoard[flipPos.row()][flipPos.col()].getOwner()));
-                        GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
+                    // If out of bounds, stop checking this direction
+                    if (r < 0 || r >= 8 || c < 0 || c >= 8) {
+                        break;
                     }
-                    break; // Stop checking this direction after flipping
-                }
-                // If it's the current player's disc but no opponent discs in between, stop
-                else {
-                    break;
+
+                    // If the cell is empty, stop checking
+                    if (GameBoard[r][c] == null || (GameBoard[r][c].getType() == "⭕" && GameBoard[r][c].getOwner() != CurrentPlayer)) {
+                        break;
+                    }
+
+                    // If it's an opponent's disc, keep adding it to the flip list
+                    if (GameBoard[r][c].getOwner() != CurrentPlayer) {
+                        discsToFlip.add(new Position(r, c));
+                    }
+                    // If it's the current player's disc, flip the opponent's discs in between
+                    else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
+                        for (Position flipPos : discsToFlip) {
+                            flippedDiscs.add(new Move.FlippedDisc(flipPos, GameBoard[flipPos.row()][flipPos.col()].getOwner()));
+                            GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
+                        }
+                        break; // Stop checking this direction after flipping
+                    }
+                    // If it's the current player's disc but no opponent discs in between, stop
+                    else {
+                        break;
+                    }
                 }
             }
-        }
-        return flippedDiscs;
-    }
+            return flippedDiscs;
 
+
+    }
 
     @Override
     public Disc getDiscAtPosition(Position position) {
@@ -274,6 +281,8 @@ public class GameLogic implements PlayableLogic {
         GameBoard[3][4] = disc34;  // Player 2's disc
         GameBoard[4][3] = disc43;  // Player 2's disc
 
+        FirstPlayer.reset_bombs_and_unflippedable();
+        SecondPlayer.reset_bombs_and_unflippedable();
 
         // Reset CurrentPlayer to Player 1
         CurrentPlayer = FirstPlayer;
