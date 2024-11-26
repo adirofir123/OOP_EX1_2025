@@ -9,6 +9,8 @@ public class GameLogic implements PlayableLogic {
     private Player SecondPlayer;
     private Disc[][] GameBoard = new Disc[8][8];
     private List<Position> ValidMoves;
+    private Stack<Move> undoStack = new Stack<>();
+    private Stack<Move> moveStack = new Stack<>();
 
     SimpleDisc disc44;
     SimpleDisc disc33;
@@ -22,14 +24,16 @@ public class GameLogic implements PlayableLogic {
             return false;
         }
         GameBoard[a.row()][a.col()] = disc;
-        flipDiscs(a);
         int playernum = CurrentPlayer == FirstPlayer ? 1 : 2;
         System.out.println("Player " + playernum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
+        List<Move.FlippedDisc> flippedDiscs = flipDiscs(a);
+        moveStack.push(new Move(a, disc, flippedDiscs));
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
         return true;
     }
 
-    public void flipDiscs(Position a) {
+    public List<Move.FlippedDisc> flipDiscs(Position a) {
+        List<Move.FlippedDisc> flippedDiscs = new ArrayList<>();
         // Array of directions to check
         int[][] directions = {
                 {-1, 0},  // Up
@@ -70,6 +74,7 @@ public class GameLogic implements PlayableLogic {
                 // If it's the current player's disc, flip the opponent's discs in between
                 else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
                     for (Position flipPos : discsToFlip) {
+                        flippedDiscs.add(new Move.FlippedDisc(flipPos,GameBoard[flipPos.row()][flipPos.col()].getOwner()));
                         GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
                     }
                     break; // Stop checking this direction after flipping
@@ -80,6 +85,7 @@ public class GameLogic implements PlayableLogic {
                 }
             }
         }
+        return flippedDiscs;
     }
 
 
@@ -276,8 +282,22 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void undoLastMove() {
-        Stack<Position> stack = new Stack<>();
-        stack.pop();
+        if(moveStack.isEmpty()) {
+            System.out.println("No moves to undo");
+            return;
+        }
+        Move lastmove = moveStack.pop();
+        Position lastplaced = lastmove.position();
+        GameBoard[lastplaced.row()][lastplaced.col()] = null;
+
+        for(Move.FlippedDisc disc: lastmove.flippedDiscs() ){
+            Position pos  = disc.getPosition();
+            GameBoard[pos.row()][pos.col()].setOwner(disc.getOriginalOwner());
+
+        }
+        CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
+        System.out.println("last move undo");
+
 
     }
 

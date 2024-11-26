@@ -2,6 +2,8 @@ import java.util.Objects;
 
 public class Position {
 private int x,y;
+private String isFlipped;
+
 
     public Position(int row, int col) {
         this.x = row;
