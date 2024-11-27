@@ -9,7 +9,7 @@ import java.util.List;
  * DON'T MAKE ANY CHANGES HERE
  */
 public class GUI_for_chess_like_games extends JFrame {
-    private static final int BUTTON_SIZE = 55;
+    private static final int BUTTON_SIZE = 100;
     private static final int FONT_SIZE = 20;
     private final JButton[][] buttons;
     private final int BOARD_SIZE;
@@ -21,7 +21,7 @@ public class GUI_for_chess_like_games extends JFrame {
     private boolean isAITurn = false; // New flag to track AI turn
     private boolean bombKeyPressed = false;  // To track if 'b' key is pressed
     private boolean unflippedKeyPressed = false;  // To track if 'v' key is pressed
-    private final JSlider aiSpeedSlider = new JSlider(JSlider.VERTICAL, 0, 2000, 1000);; // Slider to control AI response speed
+    private final JSlider aiSpeedSlider = new JSlider(JSlider.VERTICAL, 0, 2000, 1000); // Slider to control AI response speed
     private boolean showColor = true;
     private boolean showNumbers = true;
     private final JCheckBox numbersCheckBox = new JCheckBox(new AbstractAction() {

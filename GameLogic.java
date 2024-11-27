@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 public class GameLogic implements PlayableLogic {
@@ -81,6 +82,22 @@ public class GameLogic implements PlayableLogic {
                 if (GameBoard[r][c].getType().equals("⭕") && GameBoard[r][c].getOwner() != CurrentPlayer){
                     continue;
                 }
+
+                if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer) {
+                    // Add all 8 surrounding positions to the flip list
+                    int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
+                    for (int dr : dirs) {
+                        for (int dc : dirs) {
+                            if (dr == 0 && dc == 0) continue;  // Skip the center position (bomb itself)
+                            int nr = r + dr;
+                            int nc = c + dc;
+                            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && GameBoard[nr][nc] != null && !Objects.equals(GameBoard[r][c].getType(), "⭕")) {
+                                discsToFlip.add(new Position(nr, nc));
+                            }
+                        }
+                    }
+                }
+
 
                 // If it's an opponent's disc, keep adding it to the flip list
                 if (GameBoard[r][c].getOwner() != CurrentPlayer) {
@@ -261,7 +278,8 @@ public class GameLogic implements PlayableLogic {
         }
 
         // If the board is full, the game is finished
-        if (placedDiscs == 64) {
+        if (placedDiscs == 64 || ValidMoves().isEmpty()) {
+            CurrentPlayer.addWin();
             return true;
         }
 
@@ -304,8 +322,12 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void undoLastMove() {
+        if (!FirstPlayer.isHuman() || !SecondPlayer.isHuman()) {
+            System.out.println("Not allowed to undo last move if both players are not human");
+            return;
+        }
         if (moveStack.isEmpty()) {
-            System.out.println("No moves to undo");
+            System.out.println("No previous move available to undo");
             return;
         }
         Move lastmove = moveStack.pop();
@@ -318,7 +340,7 @@ public class GameLogic implements PlayableLogic {
 
         }
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
-        System.out.println("last move undo");
+        System.out.println("Undoing last move");
 
 
     }
