@@ -78,7 +78,7 @@ public class GameLogic implements PlayableLogic {
                 if (GameBoard[r][c] == null) {
                     break;
                 }
-                //if the disc is unflippable, skip the rest of the while proccess.
+                //if the disc is unflippable, skip the rest of the while process.
                 if (GameBoard[r][c].getType().equals("⭕") && GameBoard[r][c].getOwner() != CurrentPlayer){
                     continue;
                 }
@@ -336,8 +336,12 @@ public class GameLogic implements PlayableLogic {
 
         for (Move.FlippedDisc disc : lastmove.flippedDiscs()) {
             Position pos = disc.getPosition();
-            GameBoard[pos.row()][pos.col()].setOwner(disc.getOriginalOwner());
-
+            try {
+                GameBoard[pos.row()][pos.col()].setOwner(disc.getOriginalOwner());
+            }
+            catch (NullPointerException e) {
+                System.out.println("bomb");
+            }
         }
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
         System.out.println("Undoing last move");
