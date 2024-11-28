@@ -179,6 +179,25 @@ public class GameLogic implements PlayableLogic {
         }
         return totalFlips;
     }
+    public int CheckBombFlips(Position a){
+        int BombFlip = 0;
+
+        int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
+        for (int dr : dirs) {
+            for (int dc : dirs) {
+                int nr = a.row() + dr;
+                int nc = a.col() + dc;
+                // Check if the surrounding position is within bounds and not empty
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && GameBoard[nr][nc] != null && !Objects.equals(GameBoard[nr][nc].getType(), "⭕")) {
+                    // Logic to determine if a flip is possible (e.g., if it's an opponent's disc or specific conditions)
+                    if (GameBoard[nr][nc].getOwner() != CurrentPlayer) {
+                        BombFlip++; // Count this as a disc to flip (example logic)
+                    }
+                }
+            }
+        }
+        return BombFlip;
+    }
 
 
     public int getFlipsEachDir(Position a, int b, int d) {
@@ -201,11 +220,17 @@ public class GameLogic implements PlayableLogic {
             // If the cell is empty, stop
             if (GameBoard[r][c] == null) break;
 
+            if (GameBoard[r][c].getType().equals("💣")) {
+                flipped += CheckBombFlips(a);  // Ensure this properly adds the flips caused by bombs
+            }
+
+
             // If it's an opponent's disc, keep counting
             if (GameBoard[r][c].getOwner() != CurrentPlayer) {
                 flipped++;
                 validDirection = true;
             }
+
             // If it's the current player's disc, we have a valid move (flip the discs)
             else if (GameBoard[r][c].getOwner() == CurrentPlayer && validDirection) {
                 return flipped; // Return flipped count when the current player can flip opponent discs
@@ -214,6 +239,7 @@ public class GameLogic implements PlayableLogic {
             else {
                 break;
             }
+
         }
         return 0; // If no flips found in any direction
     }
