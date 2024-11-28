@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 public class GameLogic implements PlayableLogic {
 
@@ -23,14 +20,14 @@ public class GameLogic implements PlayableLogic {
         }
         if (disc.getType().equals("⭕")) {
             if (CurrentPlayer.getNumber_of_unflippedable() == 0) {
-                System.out.println("too many unflippable");
+                System.out.println("Players are limited to 2 unflippable discs");
                 return false;
             }
             CurrentPlayer.reduce_unflippedable();
         }
         if (disc.getType().equals("💣")) {
             if (CurrentPlayer.getNumber_of_bombs() == 0) {
-                System.out.println("too many bomb");
+                System.out.println("Player are limited to 3 bomb discs");
                 return false;
             }
             CurrentPlayer.reduce_bomb();
@@ -133,7 +130,7 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public int getBoardSize() {
-        return 8;
+        return GameBoard.length;
     }
 
     @Override
@@ -179,7 +176,8 @@ public class GameLogic implements PlayableLogic {
         }
         return totalFlips;
     }
-    public int CheckBombFlips(Position a){
+
+   public int CheckBombFlips(Position a){
         int BombFlip = 0;
 
         int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
@@ -204,7 +202,6 @@ public class GameLogic implements PlayableLogic {
 
 
         int flipped = 0;
-
         int r = a.row();
         int c = a.col();
         boolean validDirection = false;
@@ -220,11 +217,10 @@ public class GameLogic implements PlayableLogic {
             // If the cell is empty, stop
             if (GameBoard[r][c] == null) break;
 
-            if (GameBoard[r][c].getType().equals("💣")) {
+            if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer ) {
                 flipped += CheckBombFlips(a);  // Ensure this properly adds the flips caused by bombs
+                
             }
-
-
             // If it's an opponent's disc, keep counting
             if (GameBoard[r][c].getOwner() != CurrentPlayer) {
                 flipped++;
@@ -340,6 +336,8 @@ public class GameLogic implements PlayableLogic {
 
         FirstPlayer.reset_bombs_and_unflippedable();
         SecondPlayer.reset_bombs_and_unflippedable();
+
+        moveStack.clear();
 
         // Reset CurrentPlayer to Player 1
         CurrentPlayer = FirstPlayer;
