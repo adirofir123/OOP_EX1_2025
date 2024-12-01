@@ -46,7 +46,8 @@ public class GameLogic implements PlayableLogic {
 
     public List<Move.FlippedDisc> flipDiscs(Position a) {
         List<Move.FlippedDisc> flippedDiscs = new ArrayList<>();
-        // Array of directions to check (same as in your current implementation)
+        Set<Position> flippedPositions = new HashSet<>();  // Track flipped positions to avoid duplicates
+
         int[][] directions = {
                 {-1, 0},  // Up
                 {1, 0},   // Down
@@ -58,59 +59,47 @@ public class GameLogic implements PlayableLogic {
                 {1, 1}    // Bottom-right diagonal
         };
 
-        // Loop through each direction
         for (int[] direction : directions) {
             int r = a.row();
             int c = a.col();
             List<Position> discsToFlip = new ArrayList<>();
 
-            // Check in the current direction
             while (true) {
                 r += direction[0];
                 c += direction[1];
 
-                // If out of bounds, stop checking this direction
                 if (r < 0 || r >= 8 || c < 0 || c >= 8) {
                     break;
                 }
 
-                // If the cell is empty, stop checking
                 if (GameBoard[r][c] == null) {
                     break;
                 }
 
-                // Handle bombs and trigger explosion if necessary
                 if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer) {
-                    // Trigger explosion, recursively check the surrounding bombs
                     flipBomb(new Position(r, c), discsToFlip);
                 }
 
-                // If it's an opponent's disc, keep adding it to the flip list
                 if (GameBoard[r][c].getOwner() != CurrentPlayer) {
                     discsToFlip.add(new Position(r, c));
-                }
-
-                // If it's the current player's disc, flip the opponent's discs in between
-                else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
+                } else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
                     for (Position flipPos : discsToFlip) {
-                        flippedDiscs.add(new Move.FlippedDisc(flipPos, GameBoard[flipPos.row()][flipPos.col()].getOwner()));
-                        GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
-                        System.out.println((CurrentPlayer == FirstPlayer ? "Player 1 " : "Player 2 ") + "flipped the "
-                                + GameBoard[flipPos.row()][flipPos.col()].getType()
-                                + " in (" + (flipPos.row()) + ", " + (flipPos.col()) + ")");
-
+                        if (!flippedPositions.contains(flipPos)) {  // Check if the disc was already flipped
+                            flippedDiscs.add(new Move.FlippedDisc(flipPos, GameBoard[flipPos.row()][flipPos.col()].getOwner()));
+                            GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer);
+                            flippedPositions.add(flipPos);  // Mark as flipped
+                            System.out.println((CurrentPlayer == FirstPlayer ? "Player 1 " : "Player 2 ") + "flipped the "
+                                    + GameBoard[flipPos.row()][flipPos.col()].getType()
+                                    + " in (" + (flipPos.row()) + ", " + (flipPos.col()) + ")");
+                        }
                     }
-                    break; // Stop checking this direction after flipping
-                }
-
-                // If no opponent discs in between, stop checking
-                else {
                     break;
                 }
             }
         }
         return flippedDiscs;
     }
+
 
 
     private void flipBomb(Position bombPos, List<Position> discsToFlip) {
