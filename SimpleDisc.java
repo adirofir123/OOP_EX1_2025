@@ -21,4 +21,14 @@ public class SimpleDisc implements Disc{
         return "⬤";
     }
 
+    @Override
+    public void SetHasExploded(boolean exploded) {
+
+    }
+
+    @Override
+    public boolean GetHasExploded() {
+        return false;
+    }
+
 }

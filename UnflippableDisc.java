@@ -20,4 +20,14 @@ public class UnflippableDisc implements Disc{
     public String getType() {
         return "⭕";
     }
+
+    @Override
+    public void SetHasExploded(boolean exploded) {
+
+    }
+
+    @Override
+    public boolean GetHasExploded() {
+        return false;
+    }
 }

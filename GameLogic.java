@@ -34,16 +34,18 @@ public class GameLogic implements PlayableLogic {
         }
         GameBoard[a.row()][a.col()] = disc;
         int playerNum = CurrentPlayer == FirstPlayer ? 1 : 2;
-        System.out.println("Player " + playerNum + " placed a " + disc.getType() + " in (" + a.row() + " , " + a.col() + " )");
+        System.out.println("Player " + playerNum + " placed a " + disc.getType() + " in (" + a.row() + ", " + a.col() + ")");
         List<Move.FlippedDisc> flippedDiscs = flipDiscs(a);
         moveStack.push(new Move(a, disc, flippedDiscs));
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
+        ValidMoves();
         return true;
     }
 
+
     public List<Move.FlippedDisc> flipDiscs(Position a) {
         List<Move.FlippedDisc> flippedDiscs = new ArrayList<>();
-        // Array of directions to check
+        // Array of directions to check (same as in your current implementation)
         int[][] directions = {
                 {-1, 0},  // Up
                 {1, 0},   // Down
@@ -75,49 +77,80 @@ public class GameLogic implements PlayableLogic {
                 if (GameBoard[r][c] == null) {
                     break;
                 }
-                //if the disc is unflippable, skip the rest of the while process.
-                if (GameBoard[r][c].getType().equals("⭕") && GameBoard[r][c].getOwner() != CurrentPlayer){
-                    continue;
-                }
 
+                // Handle bombs and trigger explosion if necessary
                 if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer) {
-                    // Add all 8 surrounding positions to the flip list
-                    int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
-                    for (int dr : dirs) {
-                        for (int dc : dirs) {
-                            if (dr == 0 && dc == 0) continue;  // Skip the center position (bomb itself)
-                            int nr = r + dr;
-                            int nc = c + dc;
-                            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && GameBoard[nr][nc] != null && !Objects.equals(GameBoard[r][c].getType(), "⭕")) {
-                                discsToFlip.add(new Position(nr, nc));
-                            }
-                        }
-                    }
+                    // Trigger explosion, recursively check the surrounding bombs
+                    flipBomb(new Position(r, c), discsToFlip);
                 }
-
 
                 // If it's an opponent's disc, keep adding it to the flip list
                 if (GameBoard[r][c].getOwner() != CurrentPlayer) {
                     discsToFlip.add(new Position(r, c));
                 }
+
                 // If it's the current player's disc, flip the opponent's discs in between
                 else if (GameBoard[r][c].getOwner() == CurrentPlayer && !discsToFlip.isEmpty()) {
                     for (Position flipPos : discsToFlip) {
                         flippedDiscs.add(new Move.FlippedDisc(flipPos, GameBoard[flipPos.row()][flipPos.col()].getOwner()));
                         GameBoard[flipPos.row()][flipPos.col()].setOwner(CurrentPlayer); // Flip the discs
+                        System.out.println((CurrentPlayer == FirstPlayer ? "Player 1 " : "Player 2 ") + "flipped the "
+                                + GameBoard[flipPos.row()][flipPos.col()].getType()
+                                + " in (" + (flipPos.row()) + ", " + (flipPos.col()) + ")");
+
                     }
                     break; // Stop checking this direction after flipping
                 }
-                // If it's the current player's disc but no opponent discs in between, stop
+
+                // If no opponent discs in between, stop checking
                 else {
                     break;
                 }
             }
         }
         return flippedDiscs;
-
-
     }
+
+
+    private void flipBomb(Position bombPos, List<Position> discsToFlip) {
+        // Get the bomb at the current position
+        Disc bombDisc = GameBoard[bombPos.row()][bombPos.col()];
+
+        // If this bomb has already exploded, do not trigger it again
+        if (bombDisc.GetHasExploded()) {
+            return;
+        }
+
+        // Mark this bomb as exploded
+        bombDisc.SetHasExploded(true);
+
+        // Add surrounding positions to the flip list
+        int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
+        for (int dr : dirs) {
+            for (int dc : dirs) {
+                if (dr == 0 && dc == 0) continue;  // Skip the center position (bomb itself)
+                int nr = bombPos.row() + dr;
+                int nc = bombPos.col() + dc;
+
+                // Check if the position is within bounds
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                    // If there's a disc to flip, and it's not the bomb itself, add it
+                    if (GameBoard[nr][nc] != null && !Objects.equals(GameBoard[nr][nc].getType(), "⭕")) {
+                        discsToFlip.add(new Position(nr, nc));
+
+                        // If it's a bomb, recursively trigger its explosion
+                        if (GameBoard[nr][nc].getType().equals("💣")) {
+                            flipBomb(new Position(nr, nc), discsToFlip);
+                        }
+                    }
+                }
+            }
+        }
+
+        // After processing the bomb, reset its exploded status
+        bombDisc.SetHasExploded(false);
+    }
+
 
     @Override
     public Disc getDiscAtPosition(Position position) {
@@ -168,28 +201,43 @@ public class GameLogic implements PlayableLogic {
                 {1, -1},  // Bottom-left diagonal
                 {1, 1}    // Bottom-right diagonal
         };
-        int totalFlips = 0;
+        Set<Disc> totalFlips = new HashSet<>();
         // Loop through each direction
         for (int[] direction : directions) {
-            totalFlips += getFlipsEachDir(a, direction[0], direction[1]);
-
+            totalFlips.addAll(getFlipsEachDir(a, direction[0], direction[1]));
         }
-        return totalFlips;
+        return totalFlips.size();
     }
 
-   public int CheckBombFlips(Position a){
-        int BombFlip = 0;
-
+    public Set<Disc> CheckBombFlips(Position a) {
+        Set<Disc> BombFlip = new HashSet<>();
         int[] dirs = {-1, 0, 1};  // Direction for row and column (-1, 0, 1)
+
+        // Iterate over all directions surrounding the bomb
         for (int dr : dirs) {
             for (int dc : dirs) {
                 int nr = a.row() + dr;
                 int nc = a.col() + dc;
+
                 // Check if the surrounding position is within bounds and not empty
                 if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && GameBoard[nr][nc] != null && !Objects.equals(GameBoard[nr][nc].getType(), "⭕")) {
-                    // Logic to determine if a flip is possible (e.g., if it's an opponent's disc or specific conditions)
+                    // If it's an opponent's disc, check for bomb explosion
                     if (GameBoard[nr][nc].getOwner() != CurrentPlayer) {
-                        BombFlip++; // Count this as a disc to flip (example logic)
+                        // If it's a bomb that hasn't exploded, recursively check for explosions
+                        if (Objects.equals(GameBoard[nr][nc].getType(), "💣")
+                                && GameBoard[nr][nc].getOwner() != CurrentPlayer
+                                && !GameBoard[nr][nc].GetHasExploded()) {
+                            BombFlip.add(GameBoard[nr][nc]);  // Add the bomb disc itself
+                            GameBoard[nr][nc].SetHasExploded(true); // Mark the bomb as exploded
+
+                            // Recursively check for further bomb explosions triggered by the current bomb
+                            BombFlip.addAll(CheckBombFlips(new Position(nr, nc)));
+                            GameBoard[nr][nc].SetHasExploded(false); // Reset the bomb state after recursion
+                        }
+                        // If it's a normal disc to flip, just add it to the set
+                        else {
+                            BombFlip.add(GameBoard[nr][nc]);
+                        }
                     }
                 }
             }
@@ -198,18 +246,16 @@ public class GameLogic implements PlayableLogic {
     }
 
 
-    public int getFlipsEachDir(Position a, int b, int d) {
-
-
-        int flipped = 0;
+    public Set<Disc> getFlipsEachDir(Position a, int rowDirection, int colDirection) {
+        Set<Disc> flipped = new HashSet<>();  // To store flipped discs
         int r = a.row();
         int c = a.col();
         boolean validDirection = false;
 
         // Check in the current direction
         while (true) {
-            r += b;
-            c += d;
+            r += rowDirection;
+            c += colDirection;
 
             // If out of bounds, stop checking this direction
             if (r < 0 || r >= 8 || c < 0 || c >= 8) break;
@@ -217,27 +263,30 @@ public class GameLogic implements PlayableLogic {
             // If the cell is empty, stop
             if (GameBoard[r][c] == null) break;
 
-            if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer ) {
-                flipped += CheckBombFlips(a);  // Ensure this properly adds the flips caused by bombs
-                
+            // Handle bomb discs
+            if (GameBoard[r][c].getType().equals("💣") && GameBoard[r][c].getOwner() != CurrentPlayer) {
+                GameBoard[r][c].SetHasExploded(true);
+                flipped.addAll(CheckBombFlips(new Position(r, c)));  // Add bomb flips
+                GameBoard[r][c].SetHasExploded(false);
             }
-            // If it's an opponent's disc, keep counting
+
+            // If it's an opponent's disc, keep counting it as flipped
             if (GameBoard[r][c].getOwner() != CurrentPlayer) {
-                flipped++;
+                flipped.add(GameBoard[r][c]);  // Add opponent's disc to the flipped set
                 validDirection = true;
             }
 
-            // If it's the current player's disc, we have a valid move (flip the discs)
+            // If it's the current player's disc, and we have opponent discs in between, we can flip
             else if (GameBoard[r][c].getOwner() == CurrentPlayer && validDirection) {
-                return flipped; // Return flipped count when the current player can flip opponent discs
+                return flipped;  // Return the set of flipped discs
             }
             // If it's the current player's disc but no opponent discs in between, stop
             else {
                 break;
             }
-
         }
-        return 0; // If no flips found in any direction
+
+        return new HashSet<>();  // Return an empty set if no flips were found
     }
 
 
@@ -289,7 +338,7 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isGameFinished() {
-        // Check if the board is full
+        // Check if the board is full (64 positions occupied)
         int placedDiscs = 0;
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -299,18 +348,52 @@ public class GameLogic implements PlayableLogic {
             }
         }
 
-        // If the board is full, the game is finished
+        // If the board is full or no valid moves are available for either player, the game ends
         if (placedDiscs == 64 || ValidMoves().isEmpty()) {
-            CurrentPlayer.addWin();
+            // End game and award win to the player with most discs
+            awardWinBasedOnDiscs();
             return true;
         }
 
-        // Check if neither player has valid moves
+        // Check if neither player has valid moves left
         List<Position> firstPlayerMoves = ValidMovesForPlayer(FirstPlayer);
         List<Position> secondPlayerMoves = ValidMovesForPlayer(SecondPlayer);
 
         // If both players have no valid moves, the game is finished
-        return firstPlayerMoves.isEmpty() && secondPlayerMoves.isEmpty();
+        if (firstPlayerMoves.isEmpty() && secondPlayerMoves.isEmpty()) {
+            awardWinBasedOnDiscs();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void awardWinBasedOnDiscs() {
+        // Count discs for both players
+        int firstPlayerDiscs = 0;
+        int secondPlayerDiscs = 0;
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if (GameBoard[row][col] != null) {
+                    if (GameBoard[row][col].getOwner() == FirstPlayer) {
+                        firstPlayerDiscs++;
+                    } else if (GameBoard[row][col].getOwner() == SecondPlayer) {
+                        secondPlayerDiscs++;
+                    }
+                }
+            }
+        }
+
+        // Award the win to the player with the most discs
+        if (firstPlayerDiscs > secondPlayerDiscs) {
+            FirstPlayer.addWin();
+            System.out.println("Player 1 wins with " + firstPlayerDiscs + " discs! " + "Player 2 had " + secondPlayerDiscs + " discs!");
+        } else if (secondPlayerDiscs > firstPlayerDiscs) {
+            SecondPlayer.addWin();
+            System.out.println("Player 2 wins with " + secondPlayerDiscs + " discs! " + "Player 1 had " + firstPlayerDiscs + " discs!");
+        } else {
+            System.out.println("The game is a draw!");
+        }
     }
 
 
@@ -346,31 +429,48 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void undoLastMove() {
+        System.out.println("Undoing last move:");
         if (!FirstPlayer.isHuman() || !SecondPlayer.isHuman()) {
             System.out.println("Not allowed to undo last move if both players are not human");
             return;
         }
         if (moveStack.isEmpty()) {
-            System.out.println("No previous move available to undo");
+            System.out.println("\t No previous move available to undo");
             return;
         }
         Move lastmove = moveStack.pop();
         Position lastPlaced = lastmove.position();
+
+        // Remove the last placed disc
+        System.out.println("\t Undo: removing " + GameBoard[lastPlaced.row()][lastPlaced.col()].getType() +
+                " from (" + lastPlaced.row() + ", " + lastPlaced.col() + ")");
         GameBoard[lastPlaced.row()][lastPlaced.col()] = null;
 
+        // Iterate over the flipped discs and revert them
         for (Move.FlippedDisc disc : lastmove.flippedDiscs()) {
             Position pos = disc.getPosition();
-            try {
-                GameBoard[pos.row()][pos.col()].setOwner(disc.getOriginalOwner());
-            }
-            catch (NullPointerException e) {
-                System.out.println("bomb");
+
+            // Ensure the position isn't null before trying to set the owner
+            if (GameBoard[pos.row()][pos.col()] != null) {
+                Disc currentDisc = GameBoard[pos.row()][pos.col()];
+
+                // If the disc is a bomb, we need to reset its exploded state
+                if (currentDisc.getType().equals("💣")) {
+                    currentDisc.SetHasExploded(false);  // Reset the bomb's exploded state
+                }
+
+                // Revert the ownership of the flipped discs
+                currentDisc.setOwner(disc.getOriginalOwner());
+                System.out.println("\t Undo: flipping back " + currentDisc.getType() + " in (" + pos.row() + ", " + pos.col()+")");
+            } else {
+                System.out.println("Error: Tried to revert a flipped disc that doesn't exist");
             }
         }
+
+        // Switch to the other player
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
-        System.out.println("Undoing last move");
-
-
+        // Recalculate valid moves after undoing
+        ValidMoves();
     }
 
 

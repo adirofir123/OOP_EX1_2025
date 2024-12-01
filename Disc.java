@@ -26,5 +26,6 @@ public interface Disc {
      */
     String getType();
 
-
+    void SetHasExploded(boolean exploded);
+    boolean GetHasExploded();
 }

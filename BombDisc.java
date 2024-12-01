@@ -1,8 +1,10 @@
 public class BombDisc implements Disc {
 
     private Player owner;
+    private boolean hasExploded;
 
     public BombDisc(Player owner) {
+        this.hasExploded = false;
         this.owner = owner;
     }
 
@@ -19,5 +21,15 @@ public class BombDisc implements Disc {
     @Override
     public String getType() {
         return "💣";
+    }
+
+    @Override
+    public void SetHasExploded(boolean exploded) {
+        this.hasExploded = exploded;
+    }
+
+    @Override
+    public boolean GetHasExploded() {
+        return hasExploded;
     }
 }
