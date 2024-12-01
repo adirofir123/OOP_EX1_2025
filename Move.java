@@ -6,6 +6,10 @@ public class Move {
     private Disc disc;         // The disc that was placed
     private List<FlippedDisc> flippedDiscs; // The discs that were flipped during the move
 
+    public Move(Position position, Disc disc) {
+        this.position = position;
+        this.disc = disc;
+    }
 
     public Move(Position position, Disc disc, List<FlippedDisc> flippedDiscs) {
         this.position = position;

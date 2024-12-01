@@ -38,6 +38,7 @@ public class GameLogic implements PlayableLogic {
         List<Move.FlippedDisc> flippedDiscs = flipDiscs(a);
         moveStack.push(new Move(a, disc, flippedDiscs));
         CurrentPlayer = CurrentPlayer == FirstPlayer ? SecondPlayer : FirstPlayer;
+        System.out.println();
         ValidMoves();
         return true;
     }
@@ -338,6 +339,13 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isGameFinished() {
+        // If the game is already finished (board is full, or no valid moves), we don't need to check again
+        if (ValidMoves().isEmpty()) {
+            // We already determined that the game has no valid moves
+            awardWinBasedOnDiscs();
+            return true;
+        }
+
         // Check if the board is full (64 positions occupied)
         int placedDiscs = 0;
         for (int row = 0; row < 8; row++) {
@@ -349,7 +357,7 @@ public class GameLogic implements PlayableLogic {
         }
 
         // If the board is full or no valid moves are available for either player, the game ends
-        if (placedDiscs == 64 || ValidMoves().isEmpty()) {
+        if (placedDiscs == 64) {
             // End game and award win to the player with most discs
             awardWinBasedOnDiscs();
             return true;
@@ -368,7 +376,13 @@ public class GameLogic implements PlayableLogic {
         return false;
     }
 
+
     private void awardWinBasedOnDiscs() {
+        if (FirstPlayer == null || SecondPlayer == null) {
+            System.out.println("Cannot award win, players not set.");
+            return; // No need to award win if players are not set
+        }
+
         // Count discs for both players
         int firstPlayerDiscs = 0;
         int secondPlayerDiscs = 0;
@@ -387,10 +401,10 @@ public class GameLogic implements PlayableLogic {
         // Award the win to the player with the most discs
         if (firstPlayerDiscs > secondPlayerDiscs) {
             FirstPlayer.addWin();
-            System.out.println("Player 1 wins with " + firstPlayerDiscs + " discs! " + "Player 2 had " + secondPlayerDiscs + " discs!");
+            System.out.println("Player 1 wins with " + firstPlayerDiscs + " discs! " + "Player 2 had " + secondPlayerDiscs + " discs");
         } else if (secondPlayerDiscs > firstPlayerDiscs) {
             SecondPlayer.addWin();
-            System.out.println("Player 2 wins with " + secondPlayerDiscs + " discs! " + "Player 1 had " + firstPlayerDiscs + " discs!");
+            System.out.println("Player 2 wins with " + secondPlayerDiscs + " discs! " + "Player 1 had " + firstPlayerDiscs + " discs");
         } else {
             System.out.println("The game is a draw!");
         }
